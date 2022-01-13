@@ -4,54 +4,57 @@ document.addEventListener("DOMContentLoaded", () => {
         let constrain = false
         let resizeContainer;
 
-        const orig_src = new Image()
+        const origImage = new Image()
         const imageTarget = document.querySelector(image_target);
         const loader = document.querySelector(".js-loadfile");
         const overlay = document.querySelector(".overlay");
         const cropBtn = document.querySelector(".js-crop");
         const resetBtn = document.querySelector('.js-reset');
+        const cropWrap = document.querySelector(".crop-wrapper")
+        const ratio = document.getElementById('ratio')
 
-        const event_state = {}
-        const min_width = 60
-        const min_height = 60
-        const max_width = 1800
-        const max_height = 1900
-        const init_height = 500
-        let imageData=null;
+        const events = {}
+        const minWidth = 60
+        const minHeight = 60
+        const maxWidth = 1800
+        const maxHeight = 1900
+        const initHeight = 500
+        let imageData = null;
 
         const resize_canvas = document.createElement('canvas');
 
-        function load() {
+        function loadData() {
             imageTarget.src = imageData;
-            orig_src.src = imageTarget.src;
+            origImage.src = imageTarget.src;
             
-            imageTarget.style = `width:'auto';height:${init_height}`
+            imageTarget.style = `width:'auto';height:${initHeight}`
 
-            orig_src.addEventListener('load', function() {
+            origImage.addEventListener('load', function() {
                 let width = imageTarget.getBoundingClientRect().width;
                 let height = imageTarget.getBoundingClientRect().height;
                 resizeImageCanvas(width, height);
             })
         }
-
+        
         function init(evt) {
+
             loader.addEventListener("change", function() {
                 const files = loader.files; 
                 const reader = new FileReader();
 
                 reader.addEventListener("load", function() {
                     imageData = reader.result;
-                    load()
+                    loadData()
                 })
 
                 reader.readAsDataURL(files[0]);
             })
 
-            resetBtn.addEventListener("click", () => {
-                if(imageData) load();
+            resetBtn.addEventListener("click", function() {
+                if(imageData) loadData();
             })
 
-            orig_src.src = imageTarget.src;
+            origImage.src = imageTarget.src;
 
             function wrapImage(image) {
                 const cropWrapper = document.querySelector(".crop-wrapper");
@@ -71,87 +74,82 @@ document.addEventListener("DOMContentLoaded", () => {
                 cropWrapper.insertAdjacentHTML('beforeend', resizeContainerTemplate());
                 resizeContainer = document.querySelector(".resize-container")
                 resizeContainer.append(image)
-
-                resizeContainer.querySelectorAll(".resize-handle").forEach((item) => {
-                    item.addEventListener('mousedown', startResize)
-                })
-
-                resizeContainer.querySelector(".resize-container-ontop").addEventListener("mousedown", startMoving)
-
             }
-
             wrapImage(imageTarget);
+            
+            resizeContainer.querySelectorAll(".resize-handle").forEach((item) => {
+                item.addEventListener('mousedown', startResize)
+            })
+
+            resizeContainer.querySelector(".resize-container-ontop").addEventListener("mousedown", startMoving)
 
             cropBtn.addEventListener('click', crop);
         }
 
         function saveEventState(evt){
-            event_state.container_width = resizeContainer.getBoundingClientRect().width;
-            event_state.container_height = resizeContainer.getBoundingClientRect().height;
-            event_state.container_left = resizeContainer.getBoundingClientRect().left + window.scrollX; 
-            event_state.container_top = resizeContainer.getBoundingClientRect().top + window.scrollY;
-            event_state.mouse_x = (evt.clientX || evt.pageX) + window.scrollX; 
-            event_state.mouse_y = (evt.clientY || evt.pageY) + window.scrollY;
+            events.container_width = resizeContainer.getBoundingClientRect().width;
+            events.container_height = resizeContainer.getBoundingClientRect().height;
+            events.container_left = resizeContainer.offsetLeft + window.scrollX; 
+            events.container_top = resizeContainer.offsetTop + window.scrollY;
+            events.mouse_x = (evt.clientX || evt.pageX) + window.screenLeft; 
+            events.mouse_y = (evt.clientY || evt.pageY) + window.screenTop;
 
-            event_state.evnt = evt;
+            events.evnt = evt;
         };
 
         function resizing(evt){
-            let mouse = {};
-            let width;
-            let height;
-            let left;
-            let top;
+            // debugger;
+            let mouse = {}, width, height, left, top;
             
-            mouse.x = (evt.clientX || evt.pageX) + window.scrollX; 
-            mouse.y = (evt.clientY || evt.pageY) + window.scrollY;
-            
-            if(event_state.evnt.target.classList.contains('resize-handle-se') ){
-                width = mouse.x - event_state.container_left;
-                height = mouse.y  - event_state.container_top;
-                left = event_state.container_left;
-                top = event_state.container_top;
-            } else if(event_state.evnt.target.classList.contains('resize-handle-sw') ){
-                width = event_state.container_width - (mouse.x - event_state.container_left);
-                height = mouse.y  - event_state.container_top;
+            mouse.x = (evt.clientX || evt.pageX) + window.screenLeft; 
+            mouse.y = (evt.clientY || evt.pageY) + window.screenTop;
+
+            if(events.evnt.target.classList.contains('resize-handle-se') ){
+                width = mouse.x - events.container_left;
+                height = mouse.y  - events.container_top;
+                left = events.container_left;
+                top = events.container_top;
+            } else if(events.evnt.target.classList.contains('resize-handle-sw') ){
+                width = events.container_width - (mouse.x - events.container_left);
+                height = mouse.y  - events.container_top;
                 left = mouse.x;
-                top = event_state.container_top;
-            } else if(event_state.evnt.target.classList.contains('resize-handle-nw') ){
-                width = event_state.container_width - (mouse.x - event_state.container_left);
-                height = event_state.container_height - (mouse.y - event_state.container_top);
+                top = events.container_top;
+            } else if(events.evnt.target.classList.contains('resize-handle-nw') ){
+                width = events.container_width - (mouse.x - events.container_left);
+                height = events.container_height - (mouse.y - events.container_top);
                 left = mouse.x;
                 top = mouse.y;
-                if(constrain || evt.shiftKey){
-                    top = mouse.y - ((width / orig_src.width * orig_src.height) - height);
+                if(constrain || evt.shiftKey || ratio.checked){
+                    top = mouse.y - ((width / origImage.width * origImage.height) - height);
                 }
-            } else if(event_state.evnt.target.classList.contains('resize-handle-ne') ){
-                width = mouse.x - event_state.container_left;
-                height = event_state.container_height - (mouse.y - event_state.container_top);
-                left = event_state.container_left;
+            } else if(events.evnt.target.classList.contains('resize-handle-ne') ){
+                width = mouse.x - events.container_left;
+                height = events.container_height - (mouse.y - events.container_top);
+                left = events.container_left;
                 top = mouse.y;
-                if(constrain || evt.shiftKey){
-                    top = mouse.y - ((width / orig_src.width * orig_src.height) - height);
+                if(constrain || evt.shiftKey || ratio.checked){
+                    top = mouse.y - ((width / origImage.width * origImage.height) - height);
                 }
             }
             
-            if(constrain || evt.shiftKey){
-                height = width / orig_src.width * orig_src.height;
+            if(constrain || evt.shiftKey || ratio.checked){
+                height = width / origImage.width * origImage.height;
             }
-        
-            if(width > min_width && height > min_height && width < max_width && height < max_height){
-                resizeContainer.style = `left:${left}px;top:${top - 63}px`
+            
+            if(width > minWidth && height > minHeight && width < maxWidth && height < maxHeight){
+                resizeContainer.style = `left:${left}px;top:${top}px`;
                 resizeImage(width, height);
             }
         }
 
-        resizeImage = function(width, height){
+        function resizeImage(width, height){
             imageTarget.style = `width: ${width}px; height: ${height}px`;
         };
 
         function resizeImageCanvas(width, height){
             resize_canvas.width = width;
             resize_canvas.height = height;
-            resize_canvas.getContext('2d').drawImage(orig_src, 0, 0, width, height);   
+            resize_canvas.getContext('2d').drawImage(origImage, 0, 0, width, height);   
             imageTarget.setAttribute('src', resize_canvas.toDataURL("image/png"));
         };
 
@@ -181,20 +179,20 @@ document.addEventListener("DOMContentLoaded", () => {
             mouse.x = (evt.clientX || evt.pageX) + window.screenLeft; 
             mouse.y = (evt.clientY || evt.pageY) + window.screenTop;
 
-            resizeContainer.style.left = `${mouse.x - (event_state.mouse_x - event_state.container_left)}px`
-            resizeContainer.style.top = `${mouse.y - (event_state.mouse_y - event_state.container_top) - 85}px`
+            resizeContainer.style.left = `${mouse.x - (events.mouse_x - events.container_left)}px`
+            resizeContainer.style.top = `${mouse.y - (events.mouse_y - events.container_top)}px`
         }
 
-        function startMoving(e){
-            e.preventDefault();
-            e.stopPropagation();
-            saveEventState(e);
+        function startMoving(evt){
+            evt.preventDefault();
+            evt.stopPropagation();
+            saveEventState(evt);
             document.addEventListener("mousemove", moving)
             document.addEventListener("mouseup", endMoving)
         };
         
-        function endMoving(e){
-            e.preventDefault();
+        function endMoving(evt){
+            evt.preventDefault();
             document.removeEventListener("mousemove", moving)
             document.removeEventListener("mouseup", endMoving)
         };
@@ -212,11 +210,10 @@ document.addEventListener("DOMContentLoaded", () => {
             crop_canvas.getContext('2d').drawImage(imageTarget, left, top, width, height, 0, 0, width, height)
             const dataURL = crop_canvas.toDataURL("image/png");
             imageTarget.src = dataURL;
-            orig_src.src = imageTarget.src;
+            origImage.src = imageTarget.src;
 
-            imageTarget.addEventListener("load", function() {
-                this.style = `width: ${width}px;height: ${height}px`;
-            })
+            imageTarget.style = `width: ${width}px;height: ${height}px`;
+            imageTarget.parentNode.style = `top:${(overlay.offsetTop - cropWrap.offsetTop) + 63}px; left:${overlay.offsetLeft - cropWrap.offsetLeft}px`
         }
 
         init();
