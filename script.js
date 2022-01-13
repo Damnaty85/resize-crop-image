@@ -4,13 +4,13 @@ document.addEventListener("DOMContentLoaded", () => {
         let constrain = false
         let resizeContainer;
 
+        const cropWrapper = document.querySelector(".crop-wrapper");
         const origImage = new Image()
         const imageTarget = document.querySelector(image_target);
         const loader = document.querySelector(".js-loadfile");
         const overlay = document.querySelector(".overlay");
         const cropBtn = document.querySelector(".js-crop");
         const resetBtn = document.querySelector('.js-reset');
-        const cropWrap = document.querySelector(".crop-wrapper")
         const ratio = document.getElementById('ratio')
 
         const events = {}
@@ -57,8 +57,7 @@ document.addEventListener("DOMContentLoaded", () => {
             origImage.src = imageTarget.src;
 
             function wrapImage(image) {
-                const cropWrapper = document.querySelector(".crop-wrapper");
-                
+                              
                 function resizeContainerTemplate() {
                     return`
                         <div class="resize-container">
@@ -101,8 +100,8 @@ document.addEventListener("DOMContentLoaded", () => {
             // debugger;
             let mouse = {}, width, height, left, top;
             
-            mouse.x = (evt.clientX || evt.pageX) + window.screenLeft; 
-            mouse.y = (evt.clientY || evt.pageY) + window.screenTop;
+            mouse.x = (evt.clientX - cropWrapper.offsetLeft || evt.pageX - cropWrapper.offsetLeft) + window.screenLeft; 
+            mouse.y = (evt.clientY - cropWrapper.offsetTop || evt.pageY - cropWrapper.offsetTop) + window.screenTop;
 
             if(events.evnt.target.classList.contains('resize-handle-se') ){
                 width = mouse.x - events.container_left;
@@ -213,7 +212,7 @@ document.addEventListener("DOMContentLoaded", () => {
             origImage.src = imageTarget.src;
 
             imageTarget.style = `width: ${width}px;height: ${height}px`;
-            imageTarget.parentNode.style = `top:${(overlay.offsetTop - cropWrap.offsetTop) + 63}px; left:${overlay.offsetLeft - cropWrap.offsetLeft}px`
+            imageTarget.parentNode.style = `top:${(overlay.offsetTop)}px; left:${overlay.offsetLeft}px`
         }
 
         init();
