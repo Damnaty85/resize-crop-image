@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="./style.css"> 
+    <title>Document</title>
+</head>
+<body>
+    <input type="file" class="btn js-loadfile" value="Upload" />
+    <button class="btn js-reset">Reset</button>
+    <button class="btn js-crop">Crop</button>
+    <div class="crop-wrapper">
+        <div class="top-overlay"></div>
+        <div class="bottom-overlay"></div>
+        <div class="left-overlay"></div>
+        <div class="right-overlay"></div>
+        <div class="overlay">
+            <div class="overlay-inner"></div>
+        </div>
+        <img class="resize-image" src="" alt="">
+    </div>
+    <script src="./script.js"></script>
+</body>
+</html>
