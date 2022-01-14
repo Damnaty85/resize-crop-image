@@ -12,18 +12,13 @@
 </head>
 <body>
     <input type="file" class="btn js-loadfile" value="Upload" />
-    <button class="btn js-reset">Отменить</button>
-    <button class="btn js-crop">Сохранить</button>
+    <button class="btn js-reset">Сбросить</button>
+    <button class="btn js-crop">Обрезать</button>
+    <button class="btn js-submit">Сохранить</button>
     <input type="checkbox" name="" id="ratio" checked>
     <label for="ratio">Сохранять пропорции</label>
     <div class="crop-wrapper">
-        <div class="top-overlay"></div>
-        <div class="bottom-overlay"></div>
-        <div class="left-overlay"></div>
-        <div class="right-overlay"></div>
-        <div class="overlay">
-            <div class="overlay-inner"></div>
-        </div>
+        <div class="overlay"></div>
         <img class="resize-image" src="" alt="">
     </div>
     <script src="./script.js"></script>
