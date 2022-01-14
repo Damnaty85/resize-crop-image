@@ -23,6 +23,15 @@ document.addEventListener("DOMContentLoaded", () => {
 
         const resize_canvas = document.createElement('canvas');
 
+        function centringElement (parenSelector, сenterableElement) {
+            const top = parenSelector.getBoundingClientRect().height / 2 - сenterableElement.getBoundingClientRect().height / 2
+            const left = parenSelector.getBoundingClientRect().width / 2 - сenterableElement.getBoundingClientRect().width / 2
+
+            сenterableElement.style = `top:${top}px; left:${left}px`            
+        }
+
+        centringElement(cropWrapper, overlay);
+
         function loadData() {
             imageTarget.src = imageData;
             origImage.src = imageTarget.src;
@@ -52,6 +61,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
             resetBtn.addEventListener("click", function() {
                 if(imageData) loadData();
+                imageTarget.parentNode.style = `top:0px; left:0px`
             })
 
             origImage.src = imageTarget.src;
@@ -86,12 +96,12 @@ document.addEventListener("DOMContentLoaded", () => {
         }
 
         function saveEventState(evt){
-            events.container_width = resizeContainer.getBoundingClientRect().width;
-            events.container_height = resizeContainer.getBoundingClientRect().height;
-            events.container_left = resizeContainer.offsetLeft + window.scrollX; 
-            events.container_top = resizeContainer.offsetTop + window.scrollY;
-            events.mouse_x = (evt.clientX || evt.pageX) + window.screenLeft; 
-            events.mouse_y = (evt.clientY || evt.pageY) + window.screenTop;
+            events.containerWidth = resizeContainer.getBoundingClientRect().width;
+            events.containerHeight = resizeContainer.getBoundingClientRect().height;
+            events.containerLeft = resizeContainer.offsetLeft + window.scrollX; 
+            events.containerTop = resizeContainer.offsetTop + window.scrollY;
+            events.mouse_xPos = (evt.clientX || evt.pageX) + window.screenLeft; 
+            events.mouse_yPos = (evt.clientY || evt.pageY) + window.screenTop;
 
             events.evnt = evt;
         };
@@ -100,34 +110,34 @@ document.addEventListener("DOMContentLoaded", () => {
             // debugger;
             let mouse = {}, width, height, left, top;
             
-            mouse.x = (evt.clientX - cropWrapper.offsetLeft || evt.pageX - cropWrapper.offsetLeft) + window.screenLeft; 
-            mouse.y = (evt.clientY - cropWrapper.offsetTop || evt.pageY - cropWrapper.offsetTop) + window.screenTop;
+            mouse.xPos = (evt.clientX - cropWrapper.offsetLeft || evt.pageX - cropWrapper.offsetLeft) + window.screenLeft; 
+            mouse.yPos = (evt.clientY - cropWrapper.offsetTop || evt.pageY - cropWrapper.offsetTop) + window.screenTop;
 
-            if(events.evnt.target.classList.contains('resize-handle-se') ){
-                width = mouse.x - events.container_left;
-                height = mouse.y  - events.container_top;
-                left = events.container_left;
-                top = events.container_top;
-            } else if(events.evnt.target.classList.contains('resize-handle-sw') ){
-                width = events.container_width - (mouse.x - events.container_left);
-                height = mouse.y  - events.container_top;
-                left = mouse.x;
-                top = events.container_top;
-            } else if(events.evnt.target.classList.contains('resize-handle-nw') ){
-                width = events.container_width - (mouse.x - events.container_left);
-                height = events.container_height - (mouse.y - events.container_top);
-                left = mouse.x;
-                top = mouse.y;
+            if(events.evnt.target.classList.contains('resize-handle-se')){
+                width = mouse.xPos - events.containerLeft;
+                height = mouse.yPos  - events.containerTop;
+                left = events.containerLeft;
+                top = events.containerTop;
+            } else if(events.evnt.target.classList.contains('resize-handle-sw')){
+                width = events.containerWidth - (mouse.xPos - events.containerLeft);
+                height = mouse.yPos  - events.containerTop;
+                left = mouse.xPos;
+                top = events.containerTop;
+            } else if(events.evnt.target.classList.contains('resize-handle-nw')){
+                width = events.containerWidth - (mouse.xPos - events.containerLeft);
+                height = events.containerHeight - (mouse.yPos - events.containerTop);
+                left = mouse.xPos;
+                top = mouse.yPos;
                 if(constrain || evt.shiftKey || ratio.checked){
-                    top = mouse.y - ((width / origImage.width * origImage.height) - height);
+                    top = mouse.yPos - ((width / origImage.width * origImage.height) - height);
                 }
-            } else if(events.evnt.target.classList.contains('resize-handle-ne') ){
-                width = mouse.x - events.container_left;
-                height = events.container_height - (mouse.y - events.container_top);
-                left = events.container_left;
-                top = mouse.y;
+            } else if(events.evnt.target.classList.contains('resize-handle-ne')){
+                width = mouse.xPos - events.containerLeft;
+                height = events.containerHeight - (mouse.yPos - events.containerTop);
+                left = events.containerLeft;
+                top = mouse.yPos;
                 if(constrain || evt.shiftKey || ratio.checked){
-                    top = mouse.y - ((width / origImage.width * origImage.height) - height);
+                    top = mouse.yPos - ((width / origImage.width * origImage.height) - height);
                 }
             }
             
@@ -175,11 +185,13 @@ document.addEventListener("DOMContentLoaded", () => {
 
             let mouse = {}
             
-            mouse.x = (evt.clientX || evt.pageX) + window.screenLeft; 
-            mouse.y = (evt.clientY || evt.pageY) + window.screenTop;
+            mouse.xPos = (evt.clientX || evt.pageX) + window.screenLeft; 
+            mouse.yPos = (evt.clientY || evt.pageY) + window.screenTop;
 
-            resizeContainer.style.left = `${mouse.x - (events.mouse_x - events.container_left)}px`
-            resizeContainer.style.top = `${mouse.y - (events.mouse_y - events.container_top)}px`
+            const left = mouse.xPos - (events.mouse_xPos - events.containerLeft)
+            const top = mouse.yPos - (events.mouse_yPos - events.containerTop)
+
+            resizeContainer.style = `left:${left}px; top:${top}px`
         }
 
         function startMoving(evt){
@@ -202,6 +214,9 @@ document.addEventListener("DOMContentLoaded", () => {
             const top = overlay.offsetTop - resizeContainer.offsetTop;
             const width = overlay.getBoundingClientRect().width;
             const height = overlay.getBoundingClientRect().height;
+
+            overlay.setAttribute('data-left', overlay.offsetLeft)
+            overlay.setAttribute('data-top', overlay.offsetTop)
 
             crop_canvas.width = width;
             crop_canvas.height = height;
